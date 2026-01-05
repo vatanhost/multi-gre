@@ -7,8 +7,8 @@ YELLOW=$(tput setaf 3 2>/dev/null || true)
 RED=$(tput setaf 1 2>/dev/null || true)
 RESET=$(tput sgr0 2>/dev/null || true)
 
-BASE="10.10"   # ثابت - بدون پرسش
-DEFAULT_WAN="eth0"
+BASE="10.10"        # ثابت - بدون پرسش
+DEFAULT_WAN="eth0"  # اگر auto-detect نشد
 
 banner() {
   echo -e "${GREEN}"
@@ -101,7 +101,7 @@ show_status() {
   ip route | sed -n '1,40p'
   echo
   echo "${CYAN}--- iptables nat ---${RESET}"
-  iptables -t nat -S | sed -n '1,60p'
+  iptables -t nat -S | sed -n '1,80p'
 }
 
 set_iran_default_route() {
@@ -128,7 +128,10 @@ menu_iran() {
   read -rp "MTU for GRE (default 1400): " MTU
   MTU=${MTU:-1400}
 
+  banner
+  echo "${CYAN}[*] Enabling IP Forward...${RESET}"
   enable_forward
+  echo "${GREEN}[+] ip_forward enabled${RESET}"
 
   for i in $(seq 1 "$N"); do
     echo
@@ -141,6 +144,7 @@ menu_iran() {
   done
 
   echo
+  banner
   echo "${CYAN}Optional:${RESET} Send ALL internet via gre1 (default route)."
   echo "1) Yes (default via ${BASE}.1.1 dev gre1)"
   echo "2) No"
@@ -161,7 +165,10 @@ menu_foreign() {
   read -rp "MTU for GRE (default 1400): " MTU
   MTU=${MTU:-1400}
 
+  banner
+  echo "${CYAN}[*] Enabling IP Forward...${RESET}"
   enable_forward
+  echo "${GREEN}[+] ip_forward enabled${RESET}"
 
   TUN="gre${IDX}"
   NET="${BASE}.${IDX}"
@@ -172,12 +179,14 @@ menu_foreign() {
   foreign_iptables_apply "$TUN" "$WAN"
 
   echo
+  banner
   echo "${GREEN}[+] FOREIGN ready. WAN=${WAN}${RESET}"
   echo "${YELLOW}    IRAN side: ${NET}.2/30 on ${TUN}${RESET}"
   pause
 }
 
 while true; do
+  banner
   print_header
   echo "1) IRAN (Hub) - Add multiple FOREIGN tunnels"
   echo "2) FOREIGN (Spoke) - Create tunnel + NAT out"
